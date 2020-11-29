@@ -2,8 +2,7 @@ library(sm)
 
 mytrees <- as.data.frame(trees)
 print(summary(mytrees))
-cormtrx <- cor(mytrees)
-print(cormtrx)
+print(cor(mytrees))
 
 # Tests for Girth and Volume
 print(t.test(mytrees$Girth, mu = mean(mytrees$Girth)))
