@@ -220,13 +220,15 @@ alternative hypothesis: two-sided
 
 ![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_1/hw1_air_flow_plot.png)
 
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_1/hw1_stack_loss_plot.png)
+
 
 
 Сравним квантили выборки с квантилями нормального распределения:  
 
 ![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_1/hw1_air_flow_qqnorm.png)
 
-
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_1/hw1_stack_loss_qqnorm.png)
 
 Приведённые графики подтверждают, что распределения переменных не полностью соответствуют нормальному.  
 
