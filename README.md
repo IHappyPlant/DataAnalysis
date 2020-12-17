@@ -1,10 +1,10 @@
 # Анализ данных
 
-Этот репозиторий содержит код и отчёты к лабораторным работам по предмету "Анализ данных".  
-
 ## Навигация
 
-* [Средства предварительной обработки данных](#средства-предварительной-обработки-данных)
+* [Лабораторная работа 1: Средства предварительной обработки данных](#средства-предварительной-обработки-данных)
+* [Лабораторная работа 2: Линейные модели регрессии](#линейные-модели-регрессии)
+* [Лабораторная работа 3: Дисперсионный анализ](#дисперсионный-анализ)
 
 ## Средства предварительной обработки данных
 
@@ -245,3 +245,464 @@ alternative hypothesis: two-sided
 ![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_1/air_flow_hist.png)
 
 ![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_1/stack_loss_hist.png)
+
+## Линейные модели регрессии
+
+В данной работе строятся и анализируются различные линейные модели регрессии для выборки stackloss.  
+
+Из данных лабораторной работы 1 следует, что в выборке stackloss наибольший коэффициент коррелиции имеют переменные ```stack.loss``` и ```Air.Flow```.  
+
+Будем считать переменную ```stack.loss``` зависимой, а остальные переменные - предикторными.  
+
+### Парная регрессия
+
+Проведём регрессионный анализ для переменных ```stack.loss``` и ```Air.Flow```.  
+
+Построим график связи переменных:  
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_2/hw2_stack_loss_air_flow_plot.png)
+
+На графике видна зависимость ```stack.loss``` от ```Air.Flow```.  
+
+Построим модель линейной регрессии:  
+
+```R
+> data <- stackloss
+> lm.rat1<-lm(formula=data$Air.Flow~data$stack.loss)
+> summary(lm.rat1)
+
+Call:
+lm(formula = data$Air.Flow ~ data$stack.loss)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.1128 -2.3365 -0.3365  1.1767 11.6635 
+
+Coefficients:
+                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     45.90229    1.63549   28.07  < 2e-16 ***
+data$stack.loss  0.82895    0.08121   10.21 3.77e-09 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3.694 on 19 degrees of freedom
+Multiple R-squared:  0.8458,	Adjusted R-squared:  0.8377 
+F-statistic: 104.2 on 1 and 19 DF,  p-value: 3.774e-09
+```
+
+Вероятность ```F-statistic ``` составляет ```3.774e-09```, что свидетельствует о значимости модели регрессии.  
+
+Построим таблицу дисперсионного анализа:
+
+```R
+> anova(lm.rat1)
+
+Analysis of Variance Table
+
+Response: data$Air.Flow
+                Df  Sum Sq Mean Sq F value    Pr(>F)    
+data$stack.loss  1 1421.88 1421.88   104.2 3.774e-09 ***
+Residuals       19  259.26   13.65
+```
+
+Вычислим доверительные области: 
+
+```R
+> CPI.df <- cbind(predict(lm.rat1,interval ="conf"), predict(lm.rat1,interval ="pred"))
+> CPI.df <- CPI.df[,-4]
+> colnames(CPI.df) <- c("Y_fit","CI_l","CI_u","PI_l","PI_u")
+> head(CPI.df)
+
+     Y_fit     CI_l     CI_u     PI_l     PI_u
+1 80.71800 76.22876 85.20724 71.77760 89.65840
+2 76.57327 72.85781 80.28873 67.99527 85.15128
+3 76.57327 72.85781 80.28873 67.99527 85.15128
+4 69.11276 66.65979 71.56574 61.00138 77.22415
+5 60.82331 59.13420 62.51242 52.90936 68.73726
+6 60.82331 59.13420 62.51242 52.90936 68.73726
+```
+
+Построим линию регрессии и визуализируем доверительные области:
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_2/hw2_regression_line_confidence_intervals.png)
+
+### Множественная регрессия
+
+Проведём анализ зависимости переменной ```stack.loss``` от всех остальных переменных.
+
+Построим модель регрессии:
+
+```R
+> fm1 <- lm(stack.loss~., data = data)
+> summary(fm1)
+
+Call:
+lm(formula = stack.loss ~ ., data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.2377 -1.7117 -0.4551  2.3614  5.6978 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -39.9197    11.8960  -3.356  0.00375 ** 
+Air.Flow      0.7156     0.1349   5.307  5.8e-05 ***
+Water.Temp    1.2953     0.3680   3.520  0.00263 ** 
+Acid.Conc.   -0.1521     0.1563  -0.973  0.34405    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3.243 on 17 degrees of freedom
+Multiple R-squared:  0.9136,	Adjusted R-squared:  0.8983 
+F-statistic:  59.9 on 3 and 17 DF,  p-value: 3.016e-09
+```
+
+Значимыми являются коэффициенты ```(Intercept)```, ```Air.Flow``` и ```Water.Temp```. Модель в целом также является статистически значимой.
+
+Построим таблицу дисперсионного анализа:
+
+```R
+> anova(fm1)
+
+Analysis of Variance Table
+
+Response: stack.loss
+           Df  Sum Sq Mean Sq  F value    Pr(>F)    
+Air.Flow    1 1750.12 1750.12 166.3707 3.309e-10 ***
+Water.Temp  1  130.32  130.32  12.3886  0.002629 ** 
+Acid.Conc.  1    9.97    9.97   0.9473  0.344046    
+Residuals  17  178.83   10.52
+```
+
+Наибольший вклад вносят переменные ```Air.Flow``` и ```Water.Temp```.
+
+Построим таблицу наблюдаемых и предсказанных значений для ```stack.loss```:
+
+```R
+> predict.fm1 = predict.lm(fm1)
+> tabout <- cbind(data$stack.loss, predict.fm1)
+> head(tabout, n = 30)
+
+      predict.fm1
+1  42   38.765363
+2  37   38.917485
+3  37   32.444467
+4  28   22.302226
+5  18   19.711654
+6  18   21.006940
+7  19   21.389491
+8  20   21.389491
+9  15   18.144379
+10 14   12.732806
+11 14   11.363703
+12 13   10.220540
+13 11   12.428561
+14 12   12.050499
+15  8    5.638582
+16  7    6.094949
+17  8    9.519951
+18  8    8.455093
+19  9    9.598257
+20 15   13.587853
+21 15   22.237713
+```
+
+Построим диаграмму квантиль-квантиль:
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_2/hw2_fm1_qqplot.png)
+
+### Пошаговая множественная регрессия
+
+Построим пошаговуб модель множественной регрессии:
+
+```R
+> fm2 <- step(lm(stack.loss~., data = data))
+> summary(fm2)
+
+Start:  AIC=52.98
+stack.loss ~ Air.Flow + Water.Temp + Acid.Conc.
+
+             Df Sum of Sq    RSS    AIC
+- Acid.Conc.  1     9.965 188.80 52.119
+<none>                    178.83 52.980
+- Water.Temp  1   130.308 309.14 62.475
+- Air.Flow    1   296.228 475.06 71.497
+
+Step:  AIC=52.12
+stack.loss ~ Air.Flow + Water.Temp
+
+             Df Sum of Sq    RSS    AIC
+<none>                    188.80 52.119
+- Water.Temp  1    130.32 319.12 61.142
+- Air.Flow    1    294.36 483.15 69.852
+
+Call:
+lm(formula = stack.loss ~ Air.Flow + Water.Temp, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.5290 -1.7505  0.1894  2.1156  5.6588 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -50.3588     5.1383  -9.801 1.22e-08 ***
+Air.Flow      0.6712     0.1267   5.298 4.90e-05 ***
+Water.Temp    1.2954     0.3675   3.525  0.00242 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3.239 on 18 degrees of freedom
+Multiple R-squared:  0.9088,	Adjusted R-squared:  0.8986 
+F-statistic: 89.64 on 2 and 18 DF,  p-value: 4.382e-10
+```
+
+На старте алгоритма, значение ```AIC``` составляло ```52.98```. По итогу работы, значение ```AIC``` составило ```52.12```, что означает, что модель регрессии улучшилась после удаления незначащих переменных.
+
+Выполним анализ вариаций:
+
+```R
+> anova(fm2)
+
+Analysis of Variance Table
+
+Response: stack.loss
+           Df  Sum Sq Mean Sq F value    Pr(>F)    
+Air.Flow    1 1750.12 1750.12 166.859 1.528e-10 ***
+Water.Temp  1  130.32  130.32  12.425  0.002419 ** 
+Residuals  18  188.80   10.49
+```
+
+Выведем таблицу наблюдаемых и предсказанных значений, и проиллюстрируем её на графике квантиль-квантиль:
+
+```R
+> predict.fm2 <- predict.lm(fm2)
+> tabout2 <- cbind(data$stack.loss, predict.fm2)
+> head(tabout2, n = 30)
+
+      predict.fm2
+1  42   38.308002
+2  37   38.308002
+3  37   32.361527
+4  28   22.341168
+5  18   19.750465
+6  18   21.045817
+7  19   22.341168
+8  20   22.341168
+9  15   18.361199
+10 14   11.884442
+11 14   11.884442
+12 13   10.589091
+13 11   11.884442
+14 12   13.179793
+15  8    6.515207
+16  7    6.515207
+17  8    7.810558
+18  8    7.810558
+19  9    9.105909
+20 15   13.132836
+21 15   22.528998
+```
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_2/hw2_fm2_qqplot.png)
+
+## Дисперсионный анализ
+
+В данной работе проводится построение и анализ нескольких дисперсионных моделей для выборки ```npk```.
+
+Выведем выборку:
+
+```R
+> data <- npk
+> data
+
+   block N P K yield
+1      1 0 1 1  49.5
+2      1 1 1 0  62.8
+3      1 0 0 0  46.8
+4      1 1 0 1  57.0
+5      2 1 0 0  59.8
+6      2 1 1 1  58.5
+7      2 0 0 1  55.5
+8      2 0 1 0  56.0
+9      3 0 1 0  62.8
+10     3 1 1 1  55.8
+11     3 1 0 0  69.5
+12     3 0 0 1  55.0
+13     4 1 0 0  62.0
+14     4 1 1 1  48.8
+15     4 0 0 1  45.5
+16     4 0 1 0  44.2
+17     5 1 1 0  52.0
+18     5 0 0 0  51.5
+19     5 1 0 1  49.8
+20     5 0 1 1  48.8
+21     6 1 0 1  57.2
+22     6 1 1 0  59.0
+23     6 0 1 1  53.2
+24     6 0 0 0  56.0
+```
+
+Получим описательную статистику по всей выборке:
+
+```R
+> summary(data)
+
+ block N      P      K          yield      
+ 1:4   0:12   0:12   0:12   Min.   :44.20  
+ 2:4   1:12   1:12   1:12   1st Qu.:49.73  
+ 3:4                        Median :55.65  
+ 4:4                        Mean   :54.88  
+ 5:4                        3rd Qu.:58.62  
+ 6:4                        Max.   :69.50
+```
+
+Получим описательную статистику по группам:
+
+```R
+> means <- tapply(data$yield, data$block, mean)
+> means
+
+     1      2      3      4      5      6 
+54.025 57.450 60.775 50.125 50.525 56.350 
+```
+
+Построим графики для визуализации различия средних:
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/hw3_stripchart.png)
+
+![hw3_boxplot](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/hw3_boxplot.png)
+
+Оценим нормальность распределения ```yield```:
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/density_hist.png)
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/density_plot.png)Проведём тест Шапиро для проверки нормальности распределения:
+
+```R
+> shapiro.test(data$yield)
+
+	Shapiro-Wilk normality test
+
+data:  data$yield
+W = 0.97884, p-value = 0.8735
+```
+
+Значение теста Шапиро подтверждает нормальность распределения для ```yield``` по всей выборке.
+
+Проведём тест Бартлетта для проверки дисперсии по группам:
+
+```R
+> bartlett.test(data$yield, data$block)
+
+	Bartlett test of homogeneity of variances
+
+data:  data$yield and data$block
+Bartlett's K-squared = 11.508, df = 5, p-value = 0.04219
+```
+
+Из результатов теста Бартлета следует, что дисперсия по группам неоднородна ```(p-value < 0.05)```.
+
+### Однофакторный дисперсионный анализ
+
+Выполним однофакторный дисперсионный анализ:
+
+```R
+> summary(aov(yield ~ block, data = data))
+            Df Sum Sq Mean Sq F value Pr(>F)  
+block        5  343.3   68.66   2.318 0.0861 .
+Residuals   18  533.1   29.61                 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
+```p-value = 0.08 > 0.05```, из чего следует, что гипотезу о несущественности различия средних следует принять. Из этого следует, что различные комбинации значений ```N```, ```P```, ```K``` не оказывают существенного влияния на значение ```yield```.
+
+Построим линейную модель дисперсионного анализа:
+
+```R
+> summary(lm(yield ~  block, data = data))
+
+Call:
+lm(formula = yield ~ block, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.2250 -3.4937 -0.5375  2.1062 11.8750 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   54.025      2.721  19.855 1.09e-13 ***
+block2         3.425      3.848   0.890   0.3852    
+block3         6.750      3.848   1.754   0.0964 .  
+block4        -3.900      3.848  -1.013   0.3243    
+block5        -3.500      3.848  -0.910   0.3751    
+block6         2.325      3.848   0.604   0.5532    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 5.442 on 18 degrees of freedom
+Multiple R-squared:  0.3917,	Adjusted R-squared:  0.2228 
+F-statistic: 2.318 on 5 and 18 DF,  p-value: 0.08607
+```
+
+Здесь также видно, что ни одна из переменных не имеет существенного вклада в уравнение регрессии.
+
+Поскольку дисперсия по группам была неоднородной, применим для дисперсионного анализа метод Уэлча:
+
+```R
+> oneway.test(yield ~  block, data = data)
+
+	One-way analysis of means (not assuming equal variances)
+
+data:  yield and block
+F = 6.2463, num df = 5.0000, denom df = 8.0508, p-value = 0.01178
+```
+
+```p-value > 0.05``` для теста Уэлча означает, что гипотезу о несущественности различия средних следует отклонить, хотя на графиках и всех остальных тестах видно обратное. Таким образом, имеется два противоречащих значения. Для устранения неопределённости можно провести двухфакторный дисперсионный анализ.
+
+### Двухфакторный дисперсионный анализ
+
+Построим график плана эксперимента, и графики взаимодействия переменной ```yield``` с 
+
+каждой из переменных ```N```, ```P```, ```K```:
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/experiment_plan_plot.png)
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/yield_n_plot.png)
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/yield_p_plot.png)
+
+![](https://github.com/IHappyPlant/Data_Analysis/blob/master/images/homework_3/yield_k_plot.png)
+
+Проведём двухфакторный дисперсионный анализ для проверки связи переменной ```yield``` с каждой из переменных ```N```, ```P```, ```K```:
+
+```R
+> mwb <- aov(yield ~ N + block + N:block, data = data)
+> summary(mwb)
+            Df Sum Sq Mean Sq F value Pr(>F)  
+N            1  189.3  189.28   9.261 0.0102 *
+block        5  343.3   68.66   3.359 0.0397 *
+N:block      5   98.5   19.70   0.964 0.4769  
+Residuals   12  245.3   20.44                 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> mwb <- aov(yield ~ P + block + P:block, data = data)
+> summary(mwb)
+            Df Sum Sq Mean Sq F value Pr(>F)
+P            1    8.4    8.40   0.222  0.646
+block        5  343.3   68.66   1.818  0.184
+P:block      5   71.4   14.28   0.378  0.854
+Residuals   12  453.3   37.77 
+
+> mwb <- aov(yield ~ K + block + K:block, data = data)
+> summary(mwb)
+            Df Sum Sq Mean Sq F value Pr(>F)
+K            1   95.2   95.20   3.108  0.103
+block        5  343.3   68.66   2.241  0.117
+K:block      5   70.3   14.05   0.459  0.799
+Residuals   12  367.6   30.63
+```
+
+Полученные значения показывают, что переменная ```N``` вносит больший вклад в значение переменной ```yield```, чем другие.
+
